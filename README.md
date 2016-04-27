@@ -21,7 +21,7 @@ function promisedAdd (a, b) {
   return Promise.resolve(add(a, b))
 }
 
-// NOTE: this package name isn't finalized yet
+// NOTE: this package name will change if/when I publish to NPM
 let api = require('rpc/export')({
     'add': add
     'add.promised': promisedAdd
