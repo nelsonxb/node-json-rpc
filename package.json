@@ -1,0 +1,23 @@
+{
+  "name": "rpc",
+  "version": "0.0.0",
+  "description": "An implementation of JSON RPC 2.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NelsonCrosby/node-json-rpc.git"
+  },
+  "keywords": [
+    "json",
+    "rpc"
+  ],
+  "author": "Nelson Crosby <ncrosby@sourcecomb.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/NelsonCrosby/node-json-rpc/issues"
+  },
+  "homepage": "https://github.com/NelsonCrosby/node-json-rpc#readme"
+}
