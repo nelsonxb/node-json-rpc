@@ -22,7 +22,7 @@ function promisedAdd (a, b) {
 }
 
 // NOTE: this package name will change if/when I publish to NPM
-let api = require('rpc/export')({
+let api = require('rpc/export')('jrpc+tcp:', {
     'add': add
     'add.promised': promisedAdd
 })

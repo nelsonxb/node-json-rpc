@@ -21,29 +21,29 @@ let transports = {
       conn.on('data', transports.tcp.handleData.bind(conn))
       conn.calls = {}
       return transports.tcp.getFunction.bind(conn)
-    }
+    },
 
     handleData (data) {
-      let response = JSON.stringify(data)
+      let response = JSON.parse(data)
       if (response.id) {
         if (response.error) {
           this.calls[response.id].reject(response.error)
         } else {
           this.calls[response.id].resolve(response.result)
         }
+        delete this.calls[response.id]
       }
     },
 
     getFunction (method) {
-      return () => {
+      let conn = this
+      return function () {
         let params = Array.from(arguments)
         let id = generateId()
         return new Promise((resolve, reject) => {
-          this.write(JSON.stringify({
-            jsonrpc: "2.0",
-            method, params, id
-          }))
-          this.calls[id] = { resolve, reject }
+          let request = { jsonrpc: "2.0", method, params, id }
+          conn.write(JSON.stringify(request))
+          conn.calls[id] = { resolve, reject }
         })
       }
     }
@@ -51,9 +51,11 @@ let transports = {
 
   unix: {
     init (uri) {
-      let conn = tcp.createConnection({
-        path: uri.pathname
-      })
+      let path = uri.pathname
+      if (path.startsWith('/./')) {
+        path = path.substr(1)
+      }
+      let conn = tcp.createConnection({ path })
       return transports.tcp.setupConnection(conn)
     }
   }
@@ -61,6 +63,6 @@ let transports = {
 
 module.exports = function connect (uri) {
   uri = url.parse(uri)
-  let transport = uri.protocol.match(/rpc+(.+?):/)
+  let transport = uri.protocol.match(/jrpc\+(.+?):/)[1]
   return transports[transport].init(uri)
 }
