@@ -19,5 +19,8 @@
   "bugs": {
     "url": "https://github.com/NelsonCrosby/node-json-rpc/issues"
   },
-  "homepage": "https://github.com/NelsonCrosby/node-json-rpc#readme"
+  "homepage": "https://github.com/NelsonCrosby/node-json-rpc#readme",
+  "dependencies": {
+    "uuid": "^2.0.2"
+  }
 }

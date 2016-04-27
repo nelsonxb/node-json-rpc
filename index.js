@@ -3,6 +3,10 @@
 const tcp = require('net')
 const url = require('url')
 
+const uuid = require('uuid')
+
+const generateId = () => uuid.v4({ rng: uuid.nodeRNG })
+
 let transports = {
   tcp: {
     init (uri) {
