@@ -320,7 +320,11 @@ class USockRunner extends TCPRunner {
   }
 }
 
-module.exports = {
+module.exports = function getRemoteApi (caller) {
+  return caller.getMethod.bind(caller)
+}
+
+Object.assign(module.exports, {
   Caller,
   LocalCaller,
   TCPCaller,
@@ -328,4 +332,4 @@ module.exports = {
   Runner,
   TCPRunner,
   USockRunner
-}
+})
