@@ -72,7 +72,28 @@ class Caller {
 
 // Allows the Caller API to be used for
 // a local Runner
-class LocalCaller extends Caller {}
+class LocalCaller extends Caller {
+  constructor (runner) {
+    super()
+    this._runner = runner
+  }
+
+  // Since we're staying local, we don't
+  // actually need ids, so there's no
+  // point spending the extra resources
+  // to do so.
+  generateId () { return 0 }
+
+  // The required function by Caller to
+  // actually perform the request.
+  // Must take a request object, and
+  // return a promise to the response.
+  _makeRequest (request) {
+    // The `.handleRequest()` function just
+    // so happens to do everything we need.
+    return this._runner.handleRequest(request)
+  }
+}
 
 // Calls methods over TCP
 class TCPCaller extends Caller {}
@@ -126,7 +147,7 @@ class Runner {
   // method.
   callMethod (request) {
     return new Promise((resolve, reject) => {
-      let method = fns[request.method]
+      let method = this._methods[request.method]
       if (!method)
         return reject({ code: -32601, message: 'Method not found' })
 
@@ -145,10 +166,10 @@ class Runner {
   handleRequest (request) {
     let p = Promise.resolve(request)
     if (typeof request === 'string') {
-      p = p.then(this.verifyJSON)
+      p = p.then(r => this.verifyJSON(r))
     }
-    return p.then(this.verifyRequest)
-      .then(this.callMethod)
+    return p.then(r => this.verifyRequest(r))
+      .then(r => this.callMethod(r))
       .then(result => this.createResultResponse(result, request.id),
             error => this.createErrorResponse(error, request.id))
   }
@@ -186,3 +207,13 @@ class TCPRunner extends Runner {}
 // similarly to TCP connections, it just
 // mostly just re-uses functionality from TCPCaller
 class USockRunner extends TCPRunner {}
+
+module.exports = {
+  Caller,
+  LocalCaller,
+  TCPCaller,
+  USockCaller,
+  Runner,
+  TCPRunner,
+  USockRunner
+}
