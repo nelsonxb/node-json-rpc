@@ -1,5 +1,9 @@
 'use strict'
 
+const TCP_DEFAULT_PORT = 55772
+
+const tcp = require('net')
+const url = require('url')
 const uuid = require('uuid')
 
 // JSON-RPC version
@@ -96,7 +100,47 @@ class LocalCaller extends Caller {
 }
 
 // Calls methods over TCP
-class TCPCaller extends Caller {}
+// Note that the URI _requires_ a protocol,
+// since url.parse() breaks otherwise.
+class TCPCaller extends Caller {
+  constructor (uri) {
+    super()
+    uri = url.parse(uri)
+    uri.port = uri.port || TCP_DEFAULT_PORT
+    // Stores data to link responses to requests
+    this._requests = {}
+    // Set up the connection
+    this._conn = tcp.connect(uri.port, uri.hostname)
+    this._conn.setEncoding('utf8')
+    this._conn.on('data', (data) => {
+      data.trim().split('\n').forEach(line => {
+        let pl = JSON.parse(line.trim())
+        // Check for ID and resolve response
+        if (pl.id != null && this._requests[pl.id]) {
+          this._requests[pl.id].resolve(pl)
+        } else {
+          console.error(pl)
+        }
+      })
+    })
+  }
+
+  // The required function by Caller to
+  // actually perform the request.
+  // Must take a request object, and
+  // return a promise to the response.
+  _makeRequest (request) {
+    let data = JSON.stringify(request)
+    return new Promise((resolve, reject) => {
+      // Send the data
+      this._conn.write(data + '\n')
+      // Set up data to link response back
+      if (request.id) {
+        this._requests[request.id] = { resolve }
+      }
+    })
+  }
+}
 
 // Calls methods over Unix sockets
 // Since Node treats Unix sockets extremely
@@ -169,9 +213,9 @@ class Runner {
       p = p.then(r => this.verifyJSON(r))
     }
     return p.then(r => this.verifyRequest(r))
-      .then(r => this.callMethod(r))
-      .then(result => this.createResultResponse(result, request.id),
-            error => this.createErrorResponse(error, request.id))
+      .then(r => this.callMethod(r)
+        .then(result => this.createResultResponse(result, r.id),
+              error => this.createErrorResponse(error, r.id)))
   }
 
   // Creates a response from a result.
@@ -200,7 +244,26 @@ class Runner {
 }
 
 // Listens for requests over TCP
-class TCPRunner extends Runner {}
+class TCPRunner extends Runner {
+  constructor (port, methods) {
+    super(methods || port)
+    port = methods ? port : TCP_DEFAULT_PORT
+
+    // Set up server
+    this._srv = tcp.createServer((c) => {
+      // Set up connection
+      c.setEncoding('utf8')
+      c.on('data', (data) => {
+        data.trim().split('\n').forEach(line =>
+          this.handleRequest(line) // Delegate all the heavy lifting to Runner
+            .then(response => response && // Ensure we actually want to respond
+              c.write(JSON.stringify(response) + '\n'))) // OK, send response
+      })
+    })
+    // Start server
+    this._srv.listen(port)
+  }
+}
 
 // Listens for requests over Unix sockets
 // Since Node treats Unix sockets extremely
