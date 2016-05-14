@@ -43,12 +43,12 @@ function ensure (promise, expected, expectError) {
     })
 }
 
-let runner = new rpc.TCPRunner(12345, {
+let runner = new rpc.USockRunner('./test.sock', {
   'add': (a, b) => a + b,
   'sub': (a, b) => a - b
 })
 
-let caller = new rpc.TCPCaller('jrpc://localhost:12345')
+let caller = new rpc.USockCaller('./test.sock')
 let add = caller.getMethod('add')
 let sub = caller.getMethod('sub')
 

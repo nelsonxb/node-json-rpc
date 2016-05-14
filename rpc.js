@@ -137,12 +137,10 @@ class LocalCaller extends Caller {
 // Note that the URI _requires_ a protocol,
 // since url.parse() breaks otherwise.
 class TCPCaller extends Caller {
-  constructor (uri) {
+  constructor (arg) {
     super()
-    uri = url.parse(uri)
-    uri.port = uri.port || TCP_DEFAULT_PORT
     // Set up the connection
-    this._conn = tcp.connect(uri.port, uri.hostname)
+    this._conn = this._openConnection(arg)
     this._conn.setEncoding('utf8')
     this._conn.on('data', (data) => {
       data.trim().split('\n').forEach(line => {
@@ -153,6 +151,15 @@ class TCPCaller extends Caller {
         }
       })
     })
+  }
+
+  // Overridable method to create a connection.
+  // Exists as its own separate method to make
+  // USockCaller trivial to implement.
+  _openConnection (uri) {
+    uri = url.parse(uri)
+    uri.port = uri.port || TCP_DEFAULT_PORT
+    return tcp.connect(uri.port, uri.hostname)
   }
 
   // The required function by Caller to
@@ -172,7 +179,11 @@ class TCPCaller extends Caller {
 // Since Node treats Unix sockets extremely
 // similarly to TCP connections, it just
 // mostly just re-uses functionality from TCPCaller
-class USockCaller extends TCPCaller {}
+class USockCaller extends TCPCaller {
+  _openConnection (path) {
+    return tcp.connect(path)
+  }
+}
 
 // Abstract class that runs local methods.
 // Provides the base API for servers.
@@ -271,23 +282,31 @@ class Runner {
 
 // Listens for requests over TCP
 class TCPRunner extends Runner {
-  constructor (port, methods) {
-    super(methods || port)
-    port = methods ? port : TCP_DEFAULT_PORT
-
+  constructor (arg, methods) {
+    super(methods || arg)
+    arg = methods ? arg : null
     // Set up server
-    this._srv = tcp.createServer((c) => {
-      // Set up connection
-      c.setEncoding('utf8')
-      c.on('data', (data) => {
-        data.trim().split('\n').forEach(line =>
-          this.handleRequest(line) // Delegate all the heavy lifting to Runner
-            .then(response => response && // Ensure we actually want to respond
-              c.write(JSON.stringify(response) + '\n'))) // OK, send response
-      })
-    })
+    this._srv = tcp.createServer((c) => this._onConnect(c))
     // Start server
-    this._srv.listen(port)
+    this._startServer(arg)
+  }
+
+  // Overridable method to start a server.
+  // Exists as its own separate method to make
+  // USockRunner trivial to implement.
+  _startServer (port) {
+    this._srv.listen(port || TCP_DEFAULT_PORT)
+  }
+
+  _onConnect (client) {
+    // Set up connection
+    client.setEncoding('utf8')
+    client.on('data', (data) => {
+      data.trim().split('\n').forEach(line =>
+        this.handleRequest(line) // Delegate all the heavy lifting to Runner
+          .then(response => response && // Ensure we actually want to respond
+            client.write(JSON.stringify(response) + '\n'))) // Send response
+    })
   }
 }
 
@@ -295,7 +314,11 @@ class TCPRunner extends Runner {
 // Since Node treats Unix sockets extremely
 // similarly to TCP connections, it just
 // mostly just re-uses functionality from TCPCaller
-class USockRunner extends TCPRunner {}
+class USockRunner extends TCPRunner {
+  _startServer (path) {
+    this._srv.listen(path)
+  }
+}
 
 module.exports = {
   Caller,
