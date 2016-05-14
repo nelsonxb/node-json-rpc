@@ -13,6 +13,10 @@ const jsonrpc = "2.0"
 // Abstract class that calls remote methods.
 // Provides the base API for clients.
 class Caller {
+  constructor () {
+    this._requests = {}
+  }
+
   // Generates an ID that will be unique until
   // a corresponding response is recieved.
   // Currently just generates a UUID. This
@@ -58,6 +62,36 @@ class Caller {
       return p.then(response => response.error
           ? Promise.reject(response.error)
           : Promise.resolve(response.result))
+    }
+  }
+
+  // Creates a promise that can be returned
+  // from `_makeRequest()`. Along with
+  // `_handleResponse()`, implements linking
+  // responses to requests through IDs.
+  _createResponsePromise (id) {
+    if (id == null) {
+      return null
+    }
+
+    return new Promise((resolve, reject) => {
+      this._requests[id] = { resolve }
+    })
+  }
+
+  // Resolves response promises. Should be
+  // called by subclasses to indicate that a
+  // response has been recieved. Returns
+  // `true` if the response could be linked
+  // to a request (so implementations can
+  // build in some kind of handler). Along with
+  // `_createResponsePromise()`, implements
+  // linking responses to requests through IDs.
+  _handleResponse (response) {
+    if (response.id != null && this._requests[response.id]) {
+      this._requests[response.id].resolve(response)
+      delete this._requests[response.id]
+      return true
     }
   }
 
@@ -107,18 +141,14 @@ class TCPCaller extends Caller {
     super()
     uri = url.parse(uri)
     uri.port = uri.port || TCP_DEFAULT_PORT
-    // Stores data to link responses to requests
-    this._requests = {}
     // Set up the connection
     this._conn = tcp.connect(uri.port, uri.hostname)
     this._conn.setEncoding('utf8')
     this._conn.on('data', (data) => {
       data.trim().split('\n').forEach(line => {
         let pl = JSON.parse(line.trim())
-        // Check for ID and resolve response
-        if (pl.id != null && this._requests[pl.id]) {
-          this._requests[pl.id].resolve(pl)
-        } else {
+        // Handle response
+        if (!this._handleResponse(pl)) {
           console.error(pl)
         }
       })
@@ -131,14 +161,10 @@ class TCPCaller extends Caller {
   // return a promise to the response.
   _makeRequest (request) {
     let data = JSON.stringify(request)
-    return new Promise((resolve, reject) => {
-      // Send the data
-      this._conn.write(data + '\n')
-      // Set up data to link response back
-      if (request.id) {
-        this._requests[request.id] = { resolve }
-      }
-    })
+    // Send the data
+    this._conn.write(data + '\n')
+    // Get ID-linked promise
+    return this._createResponsePromise(request.id)
   }
 }
 
