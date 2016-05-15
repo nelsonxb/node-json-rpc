@@ -209,7 +209,9 @@ class Runner {
   // Throws an object appropriate for the "error"
   // response property if the request is invalid.
   verifyRequest (request) {
-    if (typeof request !== 'object' || request instanceof Array)
+    if (typeof request !== 'object'
+        || request instanceof Array
+        || request == null)
       throw { code: -32600, message: 'Invalid request: Not a JSON Object' }
     if (request.jsonrpc !== '2.0')
       throw { code: -32600, message: 'Invalid request: Incorrect jsonrpc version' }
