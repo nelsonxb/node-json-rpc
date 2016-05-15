@@ -22,16 +22,18 @@ function promisedAdd (a, b) {
 }
 
 // NOTE: this package name will change if/when I publish to NPM
-let api = require('rpc/export')('jrpc+tcp:', {
-    'add': add
-    'add.promised': promisedAdd
+const rpc = require('rpc')
+let rpcRunner = new rpc.TCPRunner({
+  'add': add,
+  'add.promised': promisedAdd
 })
-api('add')(1, 2).then(r => assert.equal(r, 3))
+let adder = rpc(rpcRunner.localCaller)
+adder('add')(1, 2).then(v => assert.equal(v, 3))
 
 // Client
-let api = require('rpc')('jrpc+tcp:localhost')
-
-api('add.promised')(1, 2).then(r => assert.equal(r, 3))
+const rpc = require('rpc')
+let adder = rpc(new rpc.TCPCaller('jrpc:localhost'))
+adder('add.promised')(5, 4).then(v => assert.equal(v, 9))
 ```
 
 
@@ -51,20 +53,34 @@ Assuming, of course, that v1.0.0 is a version.
 
 ## Transport details
 
-The scheme is important in a URI, as it indicates the transport. TCP URIs
-use `jrpc+tcp:`, UNIX sockets use `jrpc+unix`.
+### LocalCaller
+
+This transport is passed a Runner, and simply invokes methods on that
+runner directly. It overrides the ID generator to produce a relatively
+useless ID (always `0`), since one is not needed in this case.
 
 
 ### TCP and UNIX sockets
 
-Apart from the URI, TCP and UNIX transports are identical. From here on, when
-I say that the TCP transport behaves a certain way, unless otherwise stated,
-UNIX also behaves this way.
+Apart from the class name, TCP and UNIX transports are identical. From here
+on, when I say that the TCP transport behaves a certain way, unless otherwise
+stated, UNIX also behaves this way.
 
 In the TCP transport, connections are persistent. They terminate once Node
 exits. They can also be manually terminated by `api.transport.end()`.
 
-Each JSON payload (a request or response) is written all-at-once, so each
-payload is flushed individually. Also, each palyoad is terminated by `LF`
-(this is not enforced, and is there for no particular reason other than
-"it's nicer when using netcat").
+Each JSON payload (a request or response) is delimited by line-feeds.
+Additionally, it is expected that each flushed message contains full
+JSON payloads.
+
+Note that Node internally buffers data, so a message may contain
+more than one payload. This package accounts for this. Note that
+multiple payloads in a single message _is different_ than a JSON-RPC
+Batch - while a batch requires every response to be sent back
+all-at-once as a single payload (and is currently unsupported),
+payloads in a single message are not necessarily related to each
+other. For example, two requests may be sent in one payload, but
+one response may be sent back much earlier than the other if it is
+completed quicker. As another example, two requests may be made
+in separate messages, but the responses may be sent back in one
+message if they complete about the same time.
