@@ -450,19 +450,19 @@ test("Runner: #handleRequest() produces error on invalid request", async t => {
   let response = await runner.handleRequest({
     jsonrpc: '2.0', id: 0, params: []
   })
-  t.is(response.error, 'object')
+  t.is(typeof response.error, 'object')
   t.is(response.error.code, -32600)
 
   response = await runner.handleRequest({
     jsonrpc: '2.0', id: 0, method: 'check'
   })
-  t.is(response.error, 'object')
+  t.is(typeof response.error, 'object')
   t.is(response.error.code, -32600)
 
   response = await runner.handleRequest({
     jsonrpc: '2', id: 0, method: 'check', params: []
   })
-  t.is(response.error, 'object')
+  t.is(typeof response.error, 'object')
   t.is(response.error.code, -32600)
 
   response = await runner.handleRequest({

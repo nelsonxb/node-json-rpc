@@ -249,10 +249,11 @@ class Runner {
     if (typeof request === 'string') {
       p = p.then(r => this.verifyJSON(r))
     }
-    return p.then(r => this.verifyRequest(r))
-      .then(r => this.callMethod(r)
-        .then(result => this.createResultResponse(result, r.id),
-              error => this.createErrorResponse(error, r.id)))
+    return p.then(r => Promise.resolve()
+      .then(() => this.verifyRequest(r))
+      .then(() => this.callMethod(r))
+      .then(result => this.createResultResponse(result, r.id))
+      .catch(error => this.createErrorResponse(error, r.id)))
   }
 
   // Creates a response from a result.
