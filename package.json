@@ -4,6 +4,7 @@
   "description": "An implementation of JSON RPC 2.0",
   "main": "index.js",
   "scripts": {
+    "docs": "docco *.js",
     "test": "ava"
   },
   "repository": {
@@ -24,6 +25,7 @@
     "uuid": "^2.0.3"
   },
   "devDependencies": {
-    "ava": "^0.16.0"
+    "ava": "^0.16.0",
+    "docco": "^0.7.0"
   }
 }
