@@ -21,9 +21,9 @@
   },
   "homepage": "https://github.com/NelsonCrosby/node-json-rpc#readme",
   "dependencies": {
-    "uuid": "^2.0.2"
+    "uuid": "^2.0.3"
   },
   "devDependencies": {
-    "ava": "^0.14.0"
+    "ava": "^0.16.0"
   }
 }
