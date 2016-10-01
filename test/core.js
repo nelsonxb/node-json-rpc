@@ -2,7 +2,7 @@
 
 import test from 'ava'
 
-const rpc = require('../rpc')
+const rpc = require('../core')
 
 test("Caller: #createRequest() creates valid request", t => {
   let caller = new rpc.Caller()

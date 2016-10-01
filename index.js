@@ -1,1 +1,2 @@
-module.exports = require('./rpc')
+module.exports = require('./core')
+require('./tcp')

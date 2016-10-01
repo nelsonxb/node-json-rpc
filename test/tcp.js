@@ -5,7 +5,7 @@ let porti = BASE_PORT
 
 import test from 'ava'
 
-const rpc = require('../rpc')
+const rpc = require('../tcp')
 
 test("Correct results", async t => {
   let runner = new rpc.TCPRunner(++porti, {
