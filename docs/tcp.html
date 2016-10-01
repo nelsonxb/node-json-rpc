@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>tcp.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page_wrapper">
+            <div id="jump_page">
+              
+                
+                <a class="source" href="core.html">
+                  core.js
+                </a>
+              
+                
+                <a class="source" href="index.html">
+                  index.js
+                </a>
+              
+                
+                <a class="source" href="tcp.html">
+                  tcp.js
+                </a>
+              
+            </div>
+          </div>
+        </li>
+      </ul>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>tcp.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-meta">'use strict'</span>
+
+<span class="hljs-keyword">const</span> TCP_DEFAULT_PORT = <span class="hljs-number">55772</span>
+
+<span class="hljs-keyword">const</span> tcp = <span class="hljs-built_in">require</span>(<span class="hljs-string">'net'</span>)
+<span class="hljs-keyword">const</span> url = <span class="hljs-built_in">require</span>(<span class="hljs-string">'url'</span>)
+
+<span class="hljs-keyword">const</span> core = <span class="hljs-built_in">require</span>(<span class="hljs-string">'./core'</span>)</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>Calls methods over TCP
+Note that the URI <em>requires</em> a protocol,
+since url.parse() breaks otherwise.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TCPCaller</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">core</span>.<span class="hljs-title">Caller</span> </span>{
+  <span class="hljs-keyword">constructor</span> (arg) {
+    <span class="hljs-keyword">super</span>()</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>Set up the connection</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">this</span>._conn = <span class="hljs-keyword">this</span>._openConnection(arg)
+    <span class="hljs-keyword">this</span>._conn.setEncoding(<span class="hljs-string">'utf8'</span>)
+    <span class="hljs-keyword">this</span>._conn.on(<span class="hljs-string">'data'</span>, (data) =&gt; {
+      data.trim().split(<span class="hljs-string">'\n'</span>).forEach(<span class="hljs-function"><span class="hljs-params">line</span> =&gt;</span> {
+        <span class="hljs-keyword">let</span> pl = <span class="hljs-built_in">JSON</span>.parse(line.trim())</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>Handle response</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>._handleResponse(pl)) {
+          <span class="hljs-built_in">console</span>.error(pl)
+        }
+      })
+    })
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>Overridable method to create a connection.
+Exists as its own separate method to make
+USockCaller trivial to implement.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  _openConnection (uri) {
+    uri = url.parse(uri)
+    uri.port = uri.port || TCP_DEFAULT_PORT
+    <span class="hljs-keyword">return</span> tcp.connect(uri.port, uri.hostname)
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>The required function by Caller to
+actually perform the request.
+Must take a request object, and
+return a promise to the response.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  _makeRequest (request) {
+    <span class="hljs-keyword">let</span> data = <span class="hljs-built_in">JSON</span>.stringify(request)</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>Send the data</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">this</span>._conn.write(data + <span class="hljs-string">'\n'</span>)</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>Get ID-linked promise</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>._createResponsePromise(request.id)
+  }
+}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>Calls methods over Unix sockets
+Since Node treats Unix sockets extremely
+similarly to TCP connections, it just
+mostly just re-uses functionality from TCPCaller</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">USockCaller</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">TCPCaller</span> </span>{
+  _openConnection (path) {
+    <span class="hljs-keyword">return</span> tcp.connect(path)
+  }
+}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>Listens for requests over TCP</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TCPRunner</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">core</span>.<span class="hljs-title">Runner</span> </span>{
+  <span class="hljs-keyword">constructor</span> (arg, methods) {
+    <span class="hljs-keyword">super</span>(methods || arg)
+    arg = methods ? arg : <span class="hljs-literal">null</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>Set up server</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">this</span>._srv = tcp.createServer(<span class="hljs-function">(<span class="hljs-params">c</span>) =&gt;</span> <span class="hljs-keyword">this</span>._onConnect(c))</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>Start server</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">this</span>._startServer(arg)
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>Overridable method to start a server.
+Exists as its own separate method to make
+USockRunner trivial to implement.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  _startServer (port) {
+    <span class="hljs-keyword">this</span>._srv.listen(port || TCP_DEFAULT_PORT)
+  }
+
+  _onConnect (client) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <p>Set up connection</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    client.setEncoding(<span class="hljs-string">'utf8'</span>)
+    client.on(<span class="hljs-string">'data'</span>, (data) =&gt; {
+      data.trim().split(<span class="hljs-string">'\n'</span>).forEach(<span class="hljs-function"><span class="hljs-params">line</span> =&gt;</span>
+        <span class="hljs-keyword">this</span>.handleRequest(line) <span class="hljs-comment">// Delegate all the heavy lifting to Runner</span>
+          .then(<span class="hljs-function"><span class="hljs-params">response</span> =&gt;</span> response &amp;&amp; <span class="hljs-comment">// Ensure we actually want to respond</span>
+            client.write(<span class="hljs-built_in">JSON</span>.stringify(response) + <span class="hljs-string">'\n'</span>))) <span class="hljs-comment">// Send response</span>
+    })
+  }
+}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>Listens for requests over Unix sockets
+Since Node treats Unix sockets extremely
+similarly to TCP connections, it just
+mostly just re-uses functionality from TCPCaller</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">USockRunner</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">TCPRunner</span> </span>{
+  _startServer (path) {
+    <span class="hljs-keyword">this</span>._srv.listen(path)
+  }
+}
+
+<span class="hljs-built_in">module</span>.exports = core
+<span class="hljs-built_in">Object</span>.assign(<span class="hljs-built_in">module</span>.exports, {
+  TCPCaller,
+  USockCaller,
+  TCPRunner,
+  USockRunner
+})</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

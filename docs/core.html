@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>core.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+      <ul id="jump_to">
+        <li>
+          <a class="large" href="javascript:void(0);">Jump To &hellip;</a>
+          <a class="small" href="javascript:void(0);">+</a>
+          <div id="jump_wrapper">
+          <div id="jump_page_wrapper">
+            <div id="jump_page">
+              
+                
+                <a class="source" href="core.html">
+                  core.js
+                </a>
+              
+                
+                <a class="source" href="index.html">
+                  index.js
+                </a>
+              
+                
+                <a class="source" href="tcp.html">
+                  tcp.js
+                </a>
+              
+            </div>
+          </div>
+        </li>
+      </ul>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>core.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-meta">'use strict'</span>
+
+<span class="hljs-keyword">const</span> uuid = <span class="hljs-built_in">require</span>(<span class="hljs-string">'uuid'</span>)</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>JSON-RPC version.
+Can be specified like <code>{ jsonrpc }</code>.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">const</span> jsonrpc = <span class="hljs-string">"2.0"</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>Abstract class that calls remote methods.
+Provides the base API for clients.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Caller</span> </span>{
+  <span class="hljs-keyword">constructor</span> () {
+    <span class="hljs-keyword">this</span>._requests = {}
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>Generates an ID that will be unique until
+a corresponding response is recieved.
+Currently just generates a UUID. This
+might be overkill - there might be a better
+way of doing it (which may involve a
+counterpart <code>releaseId()</code>).</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  generateId () {
+    <span class="hljs-keyword">return</span> uuid.v4()
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>Creates a request object from the given
+method, params and id. If an id isn’t
+provided, one is generated (using <code>.generateId()</code>).</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  createRequest (method, params, id) {
+    <span class="hljs-keyword">if</span> (id == <span class="hljs-literal">null</span>)
+      id = <span class="hljs-keyword">this</span>.generateId()
+    <span class="hljs-keyword">return</span> { jsonrpc, id, method, params }
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>Calls a remote method, and returns a Promise to the
+result. As expected, this promise also rejects on
+an error. Generates an ID if one isn’t provided
+(as per <code>.createRequest()</code>).</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  callMethod (method, params, id) {
+    <span class="hljs-keyword">let</span> request
+    <span class="hljs-keyword">if</span> (params == <span class="hljs-literal">null</span>) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>If we only get one argument, assume
+the request is already created.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      request = method
+    } <span class="hljs-keyword">else</span> {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>Create a request object.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      request = <span class="hljs-keyword">this</span>.createRequest(method, params, id)
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>Send the request.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">let</span> p = <span class="hljs-keyword">this</span>._makeRequest(request)
+
+    <span class="hljs-keyword">if</span> (request.id != <span class="hljs-literal">null</span>) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>We will recieve the result.</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>Wait for the result, then extract
+the result or the error.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">return</span> p.then(<span class="hljs-function"><span class="hljs-params">response</span> =&gt;</span> response.error
+          ? <span class="hljs-built_in">Promise</span>.reject(response.error)
+          : <span class="hljs-built_in">Promise</span>.resolve(response.result))
+    }
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>Creates a promise that can be returned
+from <code>_makeRequest()</code>. Along with
+<code>_handleResponse()</code>, implements linking
+responses to requests through IDs.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  _createResponsePromise (id) {
+    <span class="hljs-keyword">if</span> (id == <span class="hljs-literal">null</span>) {
+      <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>
+    }
+
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Promise</span>(<span class="hljs-function">(<span class="hljs-params">resolve, reject</span>) =&gt;</span> {
+      <span class="hljs-keyword">this</span>._requests[id] = { resolve }
+    })
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>Resolves response promises. Should be
+called by subclasses to indicate that a
+response has been recieved. Returns
+<code>true</code> if the response could be linked
+to a request (so implementations can
+build in some kind of handler). Along with
+<code>_createResponsePromise()</code>, implements
+linking responses to requests through IDs.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  _handleResponse (response) {
+    <span class="hljs-keyword">if</span> (response.id != <span class="hljs-literal">null</span> &amp;&amp; <span class="hljs-keyword">this</span>._requests[response.id]) {
+      <span class="hljs-keyword">this</span>._requests[response.id].resolve(response)
+      <span class="hljs-keyword">delete</span> <span class="hljs-keyword">this</span>._requests[response.id]
+      <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>
+    }
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <p>Gets a function that maps to a remote method.
+The mapping function simply calls <code>.callMethod()</code>
+(so it returns the same as <code>.callMethod()</code>).</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  getMethod (method) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>We need <code>arguments</code> (Node doesn’t have <code>...</code> yet),
+so we can’t use an arrow function.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">return</span> <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params"></span>) </span>{
+      <span class="hljs-keyword">let</span> params = <span class="hljs-built_in">Array</span>.from(<span class="hljs-built_in">arguments</span>)
+      <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.callMethod(method, params)
+    }.bind(<span class="hljs-keyword">this</span>) <span class="hljs-comment">// Give the correct `this`, since we aren't using arrows.</span>
+  }
+}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <p>Allows the Caller API to be used for
+a local Runner</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LocalCaller</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Caller</span> </span>{
+  <span class="hljs-keyword">constructor</span> (runner) {
+    <span class="hljs-keyword">super</span>()
+    <span class="hljs-keyword">this</span>._runner = runner
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p>Since we’re staying local, we don’t
+actually need ids, so there’s no
+point spending the extra resources
+to do so.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  generateId () { <span class="hljs-keyword">return</span> <span class="hljs-number">0</span> }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <p>The required function by Caller to
+actually perform the request.
+Must take a request object, and
+return a promise to the response.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  _makeRequest (request) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <p>The <code>.handleRequest()</code> function just
+so happens to do everything we need.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>._runner.handleRequest(request)
+  }
+}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <p>Abstract class that runs local methods.
+Provides the base API for servers.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Runner</span> </span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-21">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+              <p>We need to store the methods we’ll be calling</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">constructor</span> (methods) {
+    <span class="hljs-keyword">this</span>._methods = methods
+    <span class="hljs-keyword">this</span>.localCaller = <span class="hljs-keyword">new</span> LocalCaller(<span class="hljs-keyword">this</span>)
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-22">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-22">&#182;</a>
+              </div>
+              <p>Returns the result of JSON-parsing the data.
+Throws an object appropriate for the “error”
+response property if the JSON is invalid.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  verifyJSON (data) {
+    <span class="hljs-keyword">try</span> {
+      <span class="hljs-keyword">return</span> <span class="hljs-built_in">JSON</span>.parse(data)
+    } <span class="hljs-keyword">catch</span> (e) {
+      <span class="hljs-keyword">throw</span> { <span class="hljs-attr">code</span>: <span class="hljs-number">-32700</span>, <span class="hljs-attr">message</span>: <span class="hljs-string">'Parse error: '</span> + e.message }
+    }
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-23">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-23">&#182;</a>
+              </div>
+              <p>Returns the request.
+Throws an object appropriate for the “error”
+response property if the request is invalid.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  verifyRequest (request) {
+    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> request !== <span class="hljs-string">'object'</span>
+        || request <span class="hljs-keyword">instanceof</span> <span class="hljs-built_in">Array</span>
+        || request == <span class="hljs-literal">null</span>)
+      <span class="hljs-keyword">throw</span> { <span class="hljs-attr">code</span>: <span class="hljs-number">-32600</span>, <span class="hljs-attr">message</span>: <span class="hljs-string">'Invalid request: Not a JSON Object'</span> }
+    <span class="hljs-keyword">if</span> (request.jsonrpc !== <span class="hljs-string">'2.0'</span>)
+      <span class="hljs-keyword">throw</span> { <span class="hljs-attr">code</span>: <span class="hljs-number">-32600</span>, <span class="hljs-attr">message</span>: <span class="hljs-string">'Invalid request: Incorrect jsonrpc version'</span> }
+    <span class="hljs-keyword">if</span> (!request.method)
+      <span class="hljs-keyword">throw</span> { <span class="hljs-attr">code</span>: <span class="hljs-number">-32600</span>, <span class="hljs-attr">message</span>: <span class="hljs-string">'Invalid request: Missing method name'</span> }
+    <span class="hljs-keyword">if</span> (!request.params)
+      <span class="hljs-keyword">throw</span> { <span class="hljs-attr">code</span>: <span class="hljs-number">-32600</span>, <span class="hljs-attr">message</span>: <span class="hljs-string">'Invalid request: Missing params'</span> }
+
+    <span class="hljs-keyword">return</span> request
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-24">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-24">&#182;</a>
+              </div>
+              <p>Returns a Promise to the method result.
+Rejects the Promise with an object appropriate
+for the “error” response property if the method
+can’t be found, or if an error occured in the
+method.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  callMethod (request) {
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Promise</span>(<span class="hljs-function">(<span class="hljs-params">resolve, reject</span>) =&gt;</span> {
+      <span class="hljs-keyword">let</span> method = <span class="hljs-keyword">this</span>._methods[request.method]
+      <span class="hljs-keyword">if</span> (!method)
+        <span class="hljs-keyword">return</span> reject({ <span class="hljs-attr">code</span>: <span class="hljs-number">-32601</span>, <span class="hljs-attr">message</span>: <span class="hljs-string">'Method not found'</span> })
+
+      resolve(method)
+    }).then(<span class="hljs-function"><span class="hljs-params">method</span> =&gt;</span> method.apply(<span class="hljs-literal">null</span>, request.params))
+      .catch(<span class="hljs-function"><span class="hljs-params">error</span> =&gt;</span> <span class="hljs-built_in">Promise</span>.reject({
+        <span class="hljs-attr">code</span>: error.code || <span class="hljs-number">-1</span>,
+        <span class="hljs-attr">message</span>: <span class="hljs-keyword">typeof</span> error === <span class="hljs-string">'string'</span> ? error : error.message
+      }))
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-25">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-25">&#182;</a>
+              </div>
+              <p>Takes a request and returns a Promise to the
+appropriate response. If the request is a
+notification, the Promise resolves to <code>null</code>
+and no response should be sent.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  handleRequest (request) {
+    <span class="hljs-keyword">let</span> p = <span class="hljs-built_in">Promise</span>.resolve(request)
+    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">typeof</span> request === <span class="hljs-string">'string'</span>) {
+      p = p.then(<span class="hljs-function"><span class="hljs-params">r</span> =&gt;</span> <span class="hljs-keyword">this</span>.verifyJSON(r))
+    }
+    <span class="hljs-keyword">return</span> p.then(<span class="hljs-function"><span class="hljs-params">r</span> =&gt;</span> <span class="hljs-built_in">Promise</span>.resolve()
+      .then(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> <span class="hljs-keyword">this</span>.verifyRequest(r))
+      .then(<span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> <span class="hljs-keyword">this</span>.callMethod(r))
+      .then(<span class="hljs-function"><span class="hljs-params">result</span> =&gt;</span> <span class="hljs-keyword">this</span>.createResultResponse(result, r.id))
+      .catch(<span class="hljs-function"><span class="hljs-params">error</span> =&gt;</span> <span class="hljs-keyword">this</span>.createErrorResponse(error, r.id)))
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-26">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-26">&#182;</a>
+              </div>
+              <p>Creates a response from a result.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  createResultResponse (result, id) {
+    <span class="hljs-keyword">if</span> (id == <span class="hljs-literal">null</span>) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-27">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-27">&#182;</a>
+              </div>
+              <p>They don’t care about the response :(</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>
+    }
+    <span class="hljs-keyword">return</span> { jsonrpc, result, id }
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-28">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-28">&#182;</a>
+              </div>
+              <p>Creates a response from an error.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  createErrorResponse (error, id) {
+    <span class="hljs-keyword">if</span> (id == <span class="hljs-literal">null</span> &amp;&amp; error.code != <span class="hljs-number">-32700</span>) {</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-29">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-29">&#182;</a>
+              </div>
+              <p>They don’t care about the error.
+Note that error code -32700 skips
+this - although it’s not explicitly
+specified in the standard, there’s no
+good way to know the request id if
+the request was malformed, so we’ll
+just try to send the error back anyway.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>
+    }
+    <span class="hljs-keyword">return</span> { jsonrpc, error, id }
+  }
+}
+
+<span class="hljs-built_in">module</span>.exports = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">getRemoteApi</span> (<span class="hljs-params">caller</span>) </span>{
+  <span class="hljs-keyword">return</span> caller.getMethod.bind(caller)
+}
+
+<span class="hljs-built_in">Object</span>.assign(<span class="hljs-built_in">module</span>.exports, {
+  Caller,
+  LocalCaller,
+  Runner,
+})</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

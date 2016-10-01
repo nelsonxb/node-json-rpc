@@ -2,8 +2,8 @@
 
 const uuid = require('uuid')
 
-// JSON-RPC version
-// Can be specified like { jsonrpc }.
+// JSON-RPC version.
+// Can be specified like `{ jsonrpc }`.
 const jsonrpc = "2.0"
 
 // Abstract class that calls remote methods.
