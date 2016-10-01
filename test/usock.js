@@ -5,7 +5,7 @@ let socki = 0
 import test from 'ava'
 
 const fs = require('fs')
-const rpc = require('../rpc')
+const rpc = require('../tcp')
 
 const fsp = {
   exists (path) {
